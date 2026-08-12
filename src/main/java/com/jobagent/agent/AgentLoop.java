@@ -6,6 +6,8 @@ import com.jobagent.agent.cot.CotResult;
 import com.jobagent.common.BizException;
 import com.jobagent.llm.ChatMessage;
 import com.jobagent.llm.LlmClient;
+import com.jobagent.memory.MemoryService;
+import com.jobagent.memory.UserMemory;
 import com.jobagent.session.SessionStore;
 import com.jobagent.tool.Tool;
 import com.jobagent.tool.ToolRegistry;
@@ -29,12 +31,14 @@ public class AgentLoop {
     private final CotPromptBuilder promptBuilder;
     private final ToolRegistry toolRegistry;
     private final SessionStore sessionStore;
+    private final MemoryService memoryService;
 
-    public AgentResult run(String sessionId, String userInput, Consumer<AgentEvent> eventSink) {
+    public AgentResult run(String sessionId, String userId, String userInput, Consumer<AgentEvent> eventSink) {
         List<ChatMessage> history = sessionStore.getMessages(sessionId);
+        List<UserMemory> memories = memoryService.load(userId);
 
         List<ChatMessage> messages = new ArrayList<>();
-        messages.add(new ChatMessage("system", promptBuilder.build()));
+        messages.add(new ChatMessage("system", promptBuilder.build(memories)));
         messages.addAll(history);
         messages.add(new ChatMessage("user", userInput));
 

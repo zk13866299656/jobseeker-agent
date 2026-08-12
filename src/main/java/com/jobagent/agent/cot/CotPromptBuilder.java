@@ -1,10 +1,12 @@
 package com.jobagent.agent.cot;
 
+import com.jobagent.memory.UserMemory;
 import com.jobagent.tool.Tool;
 import com.jobagent.tool.ToolRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -13,15 +15,17 @@ public class CotPromptBuilder {
 
     private final ToolRegistry toolRegistry;
 
-    public String build() {
+    public String build(List<UserMemory> memories) {
         String tools = toolRegistry.getAll().stream()
                 .map(t -> String.format("- %s: %s；参数：%s",
                         t.name(), t.description(), t.parametersSchema()))
                 .collect(Collectors.joining("\n"));
 
+        String memorySection = buildMemorySection(memories);
+
         return """
                 你是一个求职规划智能 Agent，帮助软件工程应届生完成求职规划。
-
+                %s
                 你可以调用以下工具来完成任务：
                 %s
 
@@ -34,6 +38,16 @@ public class CotPromptBuilder {
                 要求：
                 - thinking 字段写明你的推理过程。
                 - 工具返回结果后，基于结果继续判断是否还需要调用其他工具，直到能给出最终答案。
-                """.formatted(tools);
+                """.formatted(memorySection, tools);
+    }
+
+    private String buildMemorySection(List<UserMemory> memories) {
+        if (memories == null || memories.isEmpty()) {
+            return "";
+        }
+        String lines = memories.stream()
+                .map(m -> String.format("- [%s] %s", m.getType(), m.getContent()))
+                .collect(Collectors.joining("\n"));
+        return "你已知的关于用户的信息（长期记忆；若与用户最新说法冲突，以最新说法为准）：\n" + lines;
     }
 }

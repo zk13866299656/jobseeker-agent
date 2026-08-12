@@ -30,12 +30,13 @@ public class ChatController {
 
     @GetMapping("/api/chat/stream")
     public SseEmitter stream(@RequestParam String message,
-                             @RequestParam(defaultValue = "default") String sessionId) {
+                             @RequestParam(defaultValue = "default") String sessionId,
+                             @RequestParam(defaultValue = "anonymous") String userId) {
         SseEmitter emitter = new SseEmitter(120_000L);
 
         agentExecutor.execute(() -> {
             try {
-                AgentResult result = agentLoop.run(sessionId, message, event -> {
+                AgentResult result = agentLoop.run(sessionId, userId, message, event -> {
                     try {
                         emitter.send(SseEmitter.event()
                                 .name(event.getType())
