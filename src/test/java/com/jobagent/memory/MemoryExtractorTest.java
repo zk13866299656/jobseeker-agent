@@ -53,6 +53,16 @@ class MemoryExtractorTest {
     }
 
     @Test
+    void parseFiltersUnknownTypeAndTrims() {
+        MemoryExtractor e = newExtractor(mock(LlmClient.class));
+        List<UserMemory> result = e.parse(
+                "[{\"type\":\"weakness\",\"content\":\"x\"},{\"type\":\"name\",\"content\":\" 张三 \"}]");
+        assertEquals(1, result.size());
+        assertEquals("name", result.get(0).getType());
+        assertEquals("张三", result.get(0).getContent());
+    }
+
+    @Test
     void extractBuildsPromptAndParsesResult() {
         LlmClient llm = mock(LlmClient.class);
         when(llm.chat(anyList())).thenReturn("[{\"type\":\"name\",\"content\":\"张三\"}]");

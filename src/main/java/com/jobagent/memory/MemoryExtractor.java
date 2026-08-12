@@ -30,6 +30,9 @@ public class MemoryExtractor {
     private final LlmClient llmClient;
     private final ObjectMapper objectMapper;
 
+    private static final List<String> ALLOWED_TYPES =
+            List.of("name", "target_role", "skill", "progress", "preference", "fact");
+
     public List<UserMemory> extract(List<UserMemory> existing, String userMessage, String assistantAnswer) {
         String raw = llmClient.chat(List.of(
                 new ChatMessage("system", EXTRACTOR_SYSTEM),
@@ -45,15 +48,15 @@ public class MemoryExtractor {
             }
             List<UserMemory> result = new ArrayList<>();
             for (JsonNode node : root) {
-                String type = node.path("type").asText("");
-                String content = node.path("content").asText("");
-                if (!type.isBlank() && !content.isBlank()) {
+                String type = node.path("type").asText("").trim();
+                String content = node.path("content").asText("").trim();
+                if (!type.isEmpty() && !content.isEmpty() && ALLOWED_TYPES.contains(type)) {
                     result.add(new UserMemory(type, content));
                 }
             }
             return result;
         } catch (Exception e) {
-            log.warn("记忆抽取解析失败: {}", e.getMessage());
+            log.warn("记忆抽取解析失败", e);
             return List.of();
         }
     }

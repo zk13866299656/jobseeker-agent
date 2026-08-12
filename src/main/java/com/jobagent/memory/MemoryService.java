@@ -22,7 +22,7 @@ public class MemoryService {
             }
             return store.load(appUserId);
         } catch (Exception e) {
-            log.warn("记忆加载失败: {}", e.getMessage());
+            log.warn("记忆加载失败", e);
             return List.of();
         }
     }
@@ -36,7 +36,7 @@ public class MemoryService {
                 store.upsert(appUserId, m.getType(), m.getContent(), sessionId);
             }
         } catch (Exception e) {
-            log.warn("记忆抽取失败（不影响回答）: {}", e.getMessage());
+            log.warn("记忆抽取失败（不影响回答）", e);
         }
     }
 }
