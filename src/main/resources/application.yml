@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: jobseeker-agent
+
+llm:
+  base-url: https://api.deepseek.com
+  api-key: ${DEEPSEEK_API_KEY:}
+  model: deepseek-chat
+  temperature: 0.3
