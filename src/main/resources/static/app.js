@@ -1,3 +1,9 @@
+let userId = localStorage.getItem('jobagent_user_id');
+if (!userId) {
+    userId = 'user-' + crypto.randomUUID();
+    localStorage.setItem('jobagent_user_id', userId);
+}
+
 let sessionId = localStorage.getItem('jobagent_session_id');
 if (!sessionId) {
     sessionId = 'session-' + crypto.randomUUID();
@@ -30,7 +36,7 @@ function send() {
     input.value = '';
     addLine('user', '我：' + msg);
 
-    const url = '/api/chat/stream?message=' + encodeURIComponent(msg) + '&sessionId=' + sessionId;
+    const url = '/api/chat/stream?message=' + encodeURIComponent(msg) + '&sessionId=' + sessionId + '&userId=' + userId;
     const es = new EventSource(url);
 
     es.addEventListener('thinking', e => addLine('thinking', '思考：' + e.data));

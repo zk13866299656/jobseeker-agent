@@ -3,6 +3,7 @@ package com.jobagent.web;
 import com.jobagent.agent.AgentLoop;
 import com.jobagent.agent.AgentResult;
 import com.jobagent.llm.ChatMessage;
+import com.jobagent.memory.MemoryService;
 import com.jobagent.session.SessionStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class ChatController {
     private final AgentLoop agentLoop;
     private final Executor agentExecutor;
     private final SessionStore sessionStore;
+    private final MemoryService memoryService;
 
     @GetMapping("/api/chat/history")
     public List<ChatMessage> history(@RequestParam(defaultValue = "default") String sessionId) {
@@ -45,6 +47,7 @@ public class ChatController {
                     }
                 });
                 emitter.send(SseEmitter.event().name("final_answer").data(result.getFinalAnswer()));
+                memoryService.extractAndStore(userId, sessionId, message, result.getFinalAnswer());
                 emitter.send(SseEmitter.event().name("done").data(""));
                 emitter.complete();
             } catch (Exception e) {
