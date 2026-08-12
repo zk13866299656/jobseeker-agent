@@ -44,4 +44,12 @@ class CotParserTest {
     void parseMissingFieldsThrows() {
         assertThrows(BizException.class, () -> parser.parse("{\"thinking\":\"x\"}"));
     }
+
+    @Test
+    void parseToolCallWithoutParams() {
+        String raw = "{\"thinking\":\"t\",\"tool\":\"study_plan\"}";
+        CotResult r = parser.parse(raw);
+        assertEquals(CotResult.Type.TOOL_CALL, r.getType());
+        assertTrue(r.getParams().isEmpty());
+    }
 }

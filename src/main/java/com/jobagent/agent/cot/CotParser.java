@@ -7,6 +7,7 @@ import com.jobagent.common.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -26,9 +27,7 @@ public class CotParser {
             }
             if (node.has("tool")) {
                 String tool = node.path("tool").asText();
-                JsonNode paramsNode = node.path("params");
-                Map<String, Object> params = objectMapper.convertValue(paramsNode, new TypeReference<Map<String, Object>>() {});
-                return CotResult.toolCall(thinking, tool, params);
+                return CotResult.toolCall(thinking, tool, parseParams(node.get("params")));
             }
             throw new BizException("CoT 输出缺少 tool 或 final_answer 字段");
         } catch (BizException e) {
@@ -38,17 +37,19 @@ public class CotParser {
         }
     }
 
+    private Map<String, Object> parseParams(JsonNode paramsNode) {
+        if (paramsNode == null || paramsNode.isMissingNode() || paramsNode.isNull()) {
+            return new HashMap<>();
+        }
+        return objectMapper.convertValue(paramsNode, new TypeReference<Map<String, Object>>() {});
+    }
+
     private String extractJson(String raw) {
         String s = raw.trim();
-        if (s.startsWith("```")) {
-            int firstNewline = s.indexOf('\n');
-            if (firstNewline >= 0) {
-                s = s.substring(firstNewline + 1);
-            }
-            if (s.endsWith("```")) {
-                s = s.substring(0, s.length() - 3);
-            }
-            s = s.trim();
+        int start = s.indexOf('{');
+        int end = s.lastIndexOf('}');
+        if (start >= 0 && end >= start) {
+            return s.substring(start, end + 1);
         }
         return s;
     }
