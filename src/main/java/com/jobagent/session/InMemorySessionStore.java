@@ -1,14 +1,12 @@
 package com.jobagent.session;
 
 import com.jobagent.llm.ChatMessage;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
 public class InMemorySessionStore implements SessionStore {
 
     private final Map<String, List<ChatMessage>> store = new ConcurrentHashMap<>();
