@@ -1,10 +1,26 @@
-const sessionId = 'demo-' + Date.now();
+let sessionId = localStorage.getItem('jobagent_session_id');
+if (!sessionId) {
+    sessionId = 'session-' + crypto.randomUUID();
+    localStorage.setItem('jobagent_session_id', sessionId);
+}
 
 function addLine(cls, text) {
     const div = document.createElement('div');
     div.className = cls;
     div.textContent = text;
     document.getElementById('chat').appendChild(div);
+}
+
+function loadHistory() {
+    fetch('/api/chat/history?sessionId=' + encodeURIComponent(sessionId))
+        .then(res => res.json())
+        .then(messages => {
+            messages.forEach(m => {
+                if (m.role === 'user') addLine('user', '我：' + m.content);
+                else if (m.role === 'assistant') addLine('final_answer', '回答：' + m.content);
+            });
+        })
+        .catch(() => {});
 }
 
 function send() {
@@ -27,3 +43,11 @@ function send() {
         es.close();
     });
 }
+
+function newSession() {
+    sessionId = 'session-' + crypto.randomUUID();
+    localStorage.setItem('jobagent_session_id', sessionId);
+    document.getElementById('chat').innerHTML = '';
+}
+
+loadHistory();

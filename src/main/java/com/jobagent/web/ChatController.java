@@ -2,6 +2,8 @@ package com.jobagent.web;
 
 import com.jobagent.agent.AgentLoop;
 import com.jobagent.agent.AgentResult;
+import com.jobagent.llm.ChatMessage;
+import com.jobagent.session.SessionStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 
 @Slf4j
@@ -18,6 +21,12 @@ public class ChatController {
 
     private final AgentLoop agentLoop;
     private final Executor agentExecutor;
+    private final SessionStore sessionStore;
+
+    @GetMapping("/api/chat/history")
+    public List<ChatMessage> history(@RequestParam(defaultValue = "default") String sessionId) {
+        return sessionStore.getMessages(sessionId);
+    }
 
     @GetMapping("/api/chat/stream")
     public SseEmitter stream(@RequestParam String message,
