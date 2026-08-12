@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>求职规划智能 Agent</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        #chat { border: 1px solid #ddd; border-radius: 8px; padding: 16px; min-height: 320px; }
+        .user { color: #333; margin: 8px 0; }
+        .thinking { color: #999; font-style: italic; margin: 4px 0; }
+        .tool_call { color: #2563eb; margin: 4px 0; }
+        .tool_result { color: #16a34a; white-space: pre-wrap; margin: 4px 0; }
+        .final_answer { color: #111; font-weight: bold; margin: 8px 0; }
+        .error { color: #dc2626; margin: 4px 0; }
+        #input { width: calc(100% - 90px); padding: 8px; }
+        button { padding: 8px 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>求职规划智能 Agent</h2>
+    <div id="chat"></div>
+    <div style="margin-top: 12px;">
+        <input id="input" placeholder="输入指令，如：帮我制定30天Java后端学习计划" />
+        <button onclick="send()">发送</button>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
