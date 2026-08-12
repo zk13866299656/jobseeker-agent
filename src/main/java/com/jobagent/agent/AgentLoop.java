@@ -3,6 +3,7 @@ package com.jobagent.agent;
 import com.jobagent.agent.cot.CotParser;
 import com.jobagent.agent.cot.CotPromptBuilder;
 import com.jobagent.agent.cot.CotResult;
+import com.jobagent.common.BizException;
 import com.jobagent.llm.ChatMessage;
 import com.jobagent.llm.LlmClient;
 import com.jobagent.session.SessionStore;
@@ -47,7 +48,14 @@ public class AgentLoop {
             String raw = llmClient.chat(messages);
             messages.add(new ChatMessage("assistant", raw));
 
-            CotResult cot = cotParser.parse(raw);
+            CotResult cot;
+            try {
+                cot = cotParser.parse(raw);
+            } catch (BizException e) {
+                log.warn("CoT 解析失败: {}", e.getMessage());
+                messages.add(new ChatMessage("user", "你的输出不是合法 JSON，请只输出一个 JSON 对象（含 thinking 字段，以及 tool+params 或 final_answer 之一）"));
+                continue;
+            }
             emit(eventSink, "thinking", cot.getThinking());
 
             if (cot.getType() == CotResult.Type.FINAL_ANSWER) {

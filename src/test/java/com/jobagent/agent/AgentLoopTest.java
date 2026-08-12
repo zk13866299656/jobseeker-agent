@@ -60,4 +60,24 @@ class AgentLoopTest {
         assertEquals("完成", result.getFinalAnswer());
         assertEquals(0, result.getSteps().size());
     }
+
+    @Test
+    void parseFailureRetries() {
+        LlmClient llm = mock(LlmClient.class);
+        when(llm.chat(anyList()))
+                .thenReturn("这不是合法JSON")
+                .thenReturn("{\"thinking\":\"重试\",\"final_answer\":\"重试成功\"}");
+
+        CotParser parser = new CotParser(new ObjectMapper());
+        ToolRegistry registry = new ToolRegistry(List.of(new StudyPlanTool()));
+        CotPromptBuilder promptBuilder = new CotPromptBuilder(registry);
+        SessionStore sessionStore = new InMemorySessionStore();
+
+        AgentLoop loop = new AgentLoop(llm, parser, promptBuilder, registry, sessionStore);
+
+        AgentResult result = loop.run("s3", "测试", null);
+
+        assertEquals("重试成功", result.getFinalAnswer());
+        verify(llm, times(2)).chat(anyList());
+    }
 }
