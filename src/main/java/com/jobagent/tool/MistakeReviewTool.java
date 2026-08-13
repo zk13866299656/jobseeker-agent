@@ -21,7 +21,7 @@ public class MistakeReviewTool implements Tool {
 
     @Override
     public String description() {
-        return "针对用户答错的面试题生成结构化复盘框架";
+        return "当用户提到某道面试题答错了、做错了、不会做或要复盘错题时，必须调用此工具生成结构化错题复盘卡（题目/我的错误/正确思路/知识盲区/下次怎么做），再基于复盘卡补全正确思路";
     }
 
     @Override
