@@ -16,15 +16,21 @@ public class CotPromptBuilder {
     private final ToolRegistry toolRegistry;
 
     public String build(List<UserMemory> memories) {
+        return build(memories, null);
+    }
+
+    public String build(List<UserMemory> memories, String summary) {
         String tools = toolRegistry.getAll().stream()
                 .map(t -> String.format("- %s: %s；参数：%s",
                         t.name(), t.description(), t.parametersSchema()))
                 .collect(Collectors.joining("\n"));
 
         String memorySection = buildMemorySection(memories);
+        String summarySection = buildSummarySection(summary);
 
         return """
                 你是一个求职规划智能 Agent，帮助软件工程应届生完成求职规划。
+                %s
                 %s
                 你可以调用以下工具来完成任务：
                 %s
@@ -38,7 +44,7 @@ public class CotPromptBuilder {
                 要求：
                 - thinking 字段写明你的推理过程。
                 - 工具返回结果后，基于结果继续判断是否还需要调用其他工具，直到能给出最终答案。
-                """.formatted(memorySection, tools);
+                """.formatted(memorySection, summarySection, tools);
     }
 
     private String buildMemorySection(List<UserMemory> memories) {
@@ -49,5 +55,12 @@ public class CotPromptBuilder {
                 .map(m -> String.format("- [%s] %s", m.getType(), m.getContent()))
                 .collect(Collectors.joining("\n"));
         return "你已知的关于用户的信息（长期记忆；若与用户最新说法冲突，以最新说法为准）：\n" + lines;
+    }
+
+    private String buildSummarySection(String summary) {
+        if (summary == null || summary.isBlank()) {
+            return "";
+        }
+        return "以下是之前对话的摘要（若与用户最新说法冲突，以最新说法为准）：\n" + summary;
     }
 }
