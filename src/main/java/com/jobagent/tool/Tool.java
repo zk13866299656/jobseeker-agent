@@ -6,5 +6,5 @@ public interface Tool {
     String name();
     String description();
     String parametersSchema();
-    String execute(Map<String, Object> params);
+    String execute(String userId, Map<String, Object> params);
 }

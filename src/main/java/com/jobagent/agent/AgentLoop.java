@@ -78,7 +78,7 @@ public class AgentLoop {
             emit(eventSink, "tool_call", tool.name());
             String toolResult;
             try {
-                toolResult = tool.execute(cot.getParams());
+                toolResult = tool.execute(userId, cot.getParams());
             } catch (Exception e) {
                 log.warn("工具执行异常: {}", e.getMessage());
                 toolResult = "工具执行失败：" + e.getMessage();

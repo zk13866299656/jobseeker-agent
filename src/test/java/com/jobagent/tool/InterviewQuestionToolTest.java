@@ -11,14 +11,14 @@ class InterviewQuestionToolTest {
     @Test
     void executeReturnsQuestions() {
         InterviewQuestionTool tool = new InterviewQuestionTool();
-        String result = tool.execute(Map.of("topic", "Redis"));
+        String result = tool.execute("u1", Map.of("topic", "Redis"));
         assertTrue(result.contains("缓存穿透"));
     }
 
     @Test
     void executeUnknownTopicReturnsHint() {
         InterviewQuestionTool tool = new InterviewQuestionTool();
-        String result = tool.execute(Map.of("topic", "未知"));
+        String result = tool.execute("u1", Map.of("topic", "未知"));
         assertTrue(result.contains("暂未收录"));
     }
 }

@@ -23,7 +23,7 @@ public class StudyPlanTool implements Tool {
     }
 
     @Override
-    public String execute(Map<String, Object> params) {
+    public String execute(String userId, Map<String, Object> params) {
         String targetJob = String.valueOf(params.getOrDefault("targetJob", "Java后端开发"));
         int days = Integer.parseInt(String.valueOf(params.getOrDefault("days", "30")));
         Object weak = params.get("weakPoints");

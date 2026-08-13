@@ -32,7 +32,7 @@ public class InterviewQuestionTool implements Tool {
     }
 
     @Override
-    public String execute(Map<String, Object> params) {
+    public String execute(String userId, Map<String, Object> params) {
         String topic = String.valueOf(params.getOrDefault("topic", "Java基础"));
         String q = QUESTIONS.get(topic);
         if (q == null) {
