@@ -81,20 +81,20 @@ class JobMatchToolTest {
 
         String result = tool.execute("u1", Map.of("role", "后端"));
 
-        // 别名「后端」应归一化为真实 key「Java后端」
-        assertTrue(result.contains("Java后端"));
+        // 别名「后端」应归一化为真实 key「Java后端」——只有归一化成功才会打印目标方向头
+        assertTrue(result.contains("你的目标方向：Java后端"));
     }
 
     @Test
     void resultsAreSortedByMatchDescending() {
         MemoryService memoryService = mock(MemoryService.class);
         when(memoryService.load("u1")).thenReturn(List.of(
-                new UserMemory("skill", "Java、SpringBoot、MySQL")));
+                new UserMemory("skill", "Python、C++、数据结构与算法、机器学习、数学")));
         JobMatchTool tool = new JobMatchTool(memoryService);
 
         String result = tool.execute("u1", Map.of());
 
-        // Java后端 50% 应排在 算法 0% 之前
-        assertTrue(result.indexOf("Java后端") < result.indexOf("算法"));
+        // 算法方向 100%，在插入序里排最后，但应按匹配度排到最前；Java后端 0% 应落到其后
+        assertTrue(result.indexOf("算法") < result.indexOf("Java后端"));
     }
 }
