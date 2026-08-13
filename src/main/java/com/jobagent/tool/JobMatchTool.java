@@ -5,7 +5,9 @@ import com.jobagent.memory.UserMemory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,11 @@ public class JobMatchTool implements Tool {
         ROLES.put("客户端", List.of("Java/Kotlin", "移动框架", "网络", "数据结构"));
         ROLES.put("算法", List.of("Python/C++", "数据结构与算法", "机器学习", "数学"));
     }
+
+    private static final Map<String, String> ROLE_ALIASES = Map.of(
+            "后端", "Java后端",
+            "测试", "测试开发",
+            "运维", "运维/DevOps");
 
     private final MemoryService memoryService;
 
@@ -49,7 +56,7 @@ public class JobMatchTool implements Tool {
         String targetRole = memoryValue(memories, "target_role");
         List<String> skills = splitSkills(memoryValue(memories, "skill"));
 
-        String role = params.get("role") == null ? normalizeRole(targetRole) : String.valueOf(params.get("role"));
+        String role = params.get("role") == null ? normalizeRole(targetRole) : normalizeRole(String.valueOf(params.get("role")));
 
         StringBuilder sb = new StringBuilder();
         sb.append("岗位匹配结果：\n\n");
@@ -66,15 +73,19 @@ public class JobMatchTool implements Tool {
         }
 
         sb.append("按你的技能匹配到的岗位方向（匹配度从高到低）：\n");
+        List<RoleMatch> matches = new ArrayList<>();
         for (Map.Entry<String, List<String>> e : ROLES.entrySet()) {
             String r = e.getKey();
             List<String> required = e.getValue();
-            long hit = required.stream().filter(skills::contains).count();
+            long hit = required.stream().filter(s -> tokenHit(s, skills)).count();
             int pct = required.isEmpty() ? 0 : (int) (hit * 100 / required.size());
-            sb.append("- ").append(r).append("：匹配度 ").append(pct).append("%");
-            List<String> miss = missingSkills(r, skills);
-            if (!miss.isEmpty()) {
-                sb.append("（缺：").append(String.join("、", miss)).append("）");
+            matches.add(new RoleMatch(r, pct, missingSkills(r, skills)));
+        }
+        matches.sort(Comparator.comparingInt(RoleMatch::pct).reversed());
+        for (RoleMatch m : matches) {
+            sb.append("- ").append(m.name()).append("：匹配度 ").append(m.pct()).append("%");
+            if (!m.missing().isEmpty()) {
+                sb.append("（缺：").append(String.join("、", m.missing())).append("）");
             }
             sb.append("\n");
         }
@@ -99,19 +110,42 @@ public class JobMatchTool implements Tool {
                 .toList();
     }
 
-    private String normalizeRole(String targetRole) {
-        if (targetRole == null) {
+    private String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
             return null;
         }
-        for (String r : ROLES.keySet()) {
-            if (targetRole.contains(r)) {
-                return r;
+        String r = role.trim();
+        if (ROLES.containsKey(r)) {
+            return r;
+        }
+        if (ROLE_ALIASES.containsKey(r)) {
+            return ROLE_ALIASES.get(r);
+        }
+        for (String key : ROLES.keySet()) {
+            if (r.contains(key)) {
+                return key;
             }
         }
         return null;
     }
 
+    // token "A/B" 命中判定：任一并列项在 skills 里即命中
+    private boolean tokenHit(String token, List<String> skills) {
+        if (token.contains("/")) {
+            for (String alt : token.split("/")) {
+                if (skills.contains(alt.trim())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return skills.contains(token);
+    }
+
     private List<String> missingSkills(String role, List<String> skills) {
-        return ROLES.get(role).stream().filter(s -> !skills.contains(s)).toList();
+        return ROLES.get(role).stream().filter(s -> !tokenHit(s, skills)).toList();
+    }
+
+    private record RoleMatch(String name, int pct, List<String> missing) {
     }
 }

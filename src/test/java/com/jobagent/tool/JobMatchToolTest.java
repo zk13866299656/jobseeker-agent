@@ -51,4 +51,50 @@ class JobMatchToolTest {
         assertTrue(result.contains("岗位匹配结果"));
         assertTrue(result.contains("匹配度"));
     }
+
+    @Test
+    void slashTokenCountsAsHitWhenAnyAlternativeMatches() {
+        MemoryService memoryService = mock(MemoryService.class);
+        when(memoryService.load("u1")).thenReturn(List.of(
+                new UserMemory("target_role", "测试开发"),
+                new UserMemory("skill", "Java")));
+        JobMatchTool tool = new JobMatchTool(memoryService);
+
+        String result = tool.execute("u1", Map.of());
+
+        // Java 命中 Java/Python，测试开发方向匹配度应为 1/5 = 20%
+        assertTrue(result.contains("测试开发：匹配度 20%"));
+
+        // 「你目前还缺」清单不应把 Java/Python 列为缺
+        String miss = "你目前还缺：";
+        int idx = result.indexOf(miss);
+        assertTrue(idx >= 0);
+        String missingLine = result.substring(idx, result.indexOf("\n", idx));
+        assertFalse(missingLine.contains("Java/Python"));
+    }
+
+    @Test
+    void roleParamAliasIsNormalized() {
+        MemoryService memoryService = mock(MemoryService.class);
+        when(memoryService.load("u1")).thenReturn(List.of());
+        JobMatchTool tool = new JobMatchTool(memoryService);
+
+        String result = tool.execute("u1", Map.of("role", "后端"));
+
+        // 别名「后端」应归一化为真实 key「Java后端」
+        assertTrue(result.contains("Java后端"));
+    }
+
+    @Test
+    void resultsAreSortedByMatchDescending() {
+        MemoryService memoryService = mock(MemoryService.class);
+        when(memoryService.load("u1")).thenReturn(List.of(
+                new UserMemory("skill", "Java、SpringBoot、MySQL")));
+        JobMatchTool tool = new JobMatchTool(memoryService);
+
+        String result = tool.execute("u1", Map.of());
+
+        // Java后端 50% 应排在 算法 0% 之前
+        assertTrue(result.indexOf("Java后端") < result.indexOf("算法"));
+    }
 }
