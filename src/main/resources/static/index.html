@@ -2,28 +2,90 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>求职规划智能 Agent</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
-        #chat { border: 1px solid #ddd; border-radius: 8px; padding: 16px; min-height: 320px; }
-        .user { color: #333; margin: 8px 0; }
-        .thinking { color: #999; font-style: italic; margin: 4px 0; }
-        .tool_call { color: #2563eb; margin: 4px 0; }
-        .tool_result { color: #16a34a; white-space: pre-wrap; margin: 4px 0; }
-        .final_answer { color: #111; font-weight: bold; margin: 8px 0; }
-        .error { color: #dc2626; margin: 4px 0; }
-        #input { width: calc(100% - 90px); padding: 8px; }
-        button { padding: 8px 16px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>求职规划智能 Agent</h2>
-    <div id="chat"></div>
-    <div style="margin-top: 12px;">
-        <input id="input" placeholder="输入指令，如：帮我制定30天Java后端学习计划" />
-        <button onclick="send()">发送</button>
-        <button onclick="newSession()">新会话</button>
+    <div class="app">
+        <aside id="sidebar" class="sidebar">
+            <button id="newSessionBtn" class="new-session-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                新会话
+            </button>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">快捷指令</div>
+                <div class="quick-list">
+                    <button class="quick-card" type="button" data-prompt="帮我制定30天Java后端学习计划">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        <div class="quick-text">
+                            <div class="quick-title">学习计划</div>
+                            <div class="quick-desc">按目标岗位生成分阶段计划</div>
+                        </div>
+                    </button>
+                    <button class="quick-card" type="button" data-prompt="帮我做岗位匹配，看看我适合哪个方向">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                        <div class="quick-text">
+                            <div class="quick-title">岗位匹配</div>
+                            <div class="quick-desc">按技能匹配岗位方向</div>
+                        </div>
+                    </button>
+                    <button class="quick-card" type="button" data-prompt="帮我用STAR法则优化我的项目经历">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                        <div class="quick-text">
+                            <div class="quick-title">简历优化</div>
+                            <div class="quick-desc">把经历改写成简历要点</div>
+                        </div>
+                    </button>
+                    <button class="quick-card" type="button" data-prompt="帮我复盘这道面试错题">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                        <div class="quick-text">
+                            <div class="quick-title">错题复盘</div>
+                            <div class="quick-desc">生成结构化错题复盘卡</div>
+                        </div>
+                    </button>
+                    <button class="quick-card" type="button" data-prompt="出几道Java高频面试题考考我">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                        <div class="quick-text">
+                            <div class="quick-title">面试出题</div>
+                            <div class="quick-desc">返回高频面试题</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <div class="topbar-inner">
+                    <button id="menuBtn" class="menu-btn" type="button" aria-label="打开菜单">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div class="brand"><span class="brand-dot"></span>求职规划智能 Agent</div>
+                </div>
+            </header>
+
+            <main id="chat" class="chat">
+                <div id="chatInner" class="chat-inner">
+                    <div id="emptyState" class="empty">
+                        <div class="empty-title">开始和你的求职规划助手聊聊吧</div>
+                        <div>比如：帮我制定 30 天 Java 后端学习计划</div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="composer">
+                <form id="composer" class="composer-inner">
+                    <input id="input" placeholder="输入指令，如：帮我制定30天Java后端学习计划" autocomplete="off" />
+                    <button id="sendBtn" class="send-btn" type="submit">发送</button>
+                </form>
+            </footer>
+        </div>
     </div>
+
+    <div id="scrim" class="scrim"></div>
+
     <script src="app.js"></script>
 </body>
 </html>
