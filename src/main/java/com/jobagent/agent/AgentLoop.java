@@ -32,13 +32,15 @@ public class AgentLoop {
     private final ToolRegistry toolRegistry;
     private final SessionStore sessionStore;
     private final MemoryService memoryService;
+    private final ContextCompressor contextCompressor;
 
     public AgentResult run(String sessionId, String userId, String userInput, Consumer<AgentEvent> eventSink) {
-        List<ChatMessage> history = sessionStore.getMessages(sessionId);
+        List<ChatMessage> history = sessionStore.getNormalMessages(sessionId);
+        String summary = sessionStore.getLatestSummary(sessionId);
         List<UserMemory> memories = memoryService.load(userId);
 
         List<ChatMessage> messages = new ArrayList<>();
-        messages.add(new ChatMessage("system", promptBuilder.build(memories)));
+        messages.add(new ChatMessage("system", promptBuilder.build(memories, summary)));
         messages.addAll(history);
         messages.add(new ChatMessage("user", userInput));
 
@@ -100,6 +102,7 @@ public class AgentLoop {
 
         sessionStore.append(sessionId, new ChatMessage("user", userInput));
         sessionStore.append(sessionId, new ChatMessage("assistant", finalAnswer));
+        contextCompressor.compressIfNeeded(sessionId);
 
         AgentResult result = new AgentResult();
         result.setFinalAnswer(finalAnswer);

@@ -15,10 +15,6 @@ public class CotPromptBuilder {
 
     private final ToolRegistry toolRegistry;
 
-    public String build(List<UserMemory> memories) {
-        return build(memories, null);
-    }
-
     public String build(List<UserMemory> memories, String summary) {
         String tools = toolRegistry.getAll().stream()
                 .map(t -> String.format("- %s: %s；参数：%s",
