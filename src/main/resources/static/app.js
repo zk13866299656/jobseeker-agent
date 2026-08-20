@@ -12,6 +12,25 @@ function getOrCreate(key, prefix) {
 const userId = getOrCreate('jobagent_user_id', 'user-');
 let sessionId = getOrCreate('jobagent_session_id', 'session-');
 
+/* ---------- 视图切换 ---------- */
+const viewHome = document.getElementById('view-home');
+const viewChat = document.getElementById('view-chat');
+const toastEl = document.getElementById('toast');
+
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+function showView(name) {
+  viewHome.classList.toggle('active', name === 'home');
+  viewChat.classList.toggle('active', name === 'chat');
+}
+
+/* ---------- 聊天 DOM ---------- */
 const chat = document.getElementById('chat');
 const chatInner = document.getElementById('chatInner');
 const emptyState = document.getElementById('emptyState');
@@ -22,6 +41,7 @@ const newSessionBtn = document.getElementById('newSessionBtn');
 const menuBtn = document.getElementById('menuBtn');
 const sidebar = document.getElementById('sidebar');
 const scrim = document.getElementById('scrim');
+const backBtn = document.getElementById('backBtn');
 
 let streaming = false;
 
@@ -162,6 +182,16 @@ function closeSidebar() {
   scrim.classList.remove('show');
 }
 
+/* ---------- 工作台：进入模拟面试 ---------- */
+const MOCK_PROMPT = '开始模拟面试：你当面试官，对我进行 Java 后端岗位的面试，先出第一道题。';
+
+function enterMockInterview() {
+  showView('chat');
+  input.value = MOCK_PROMPT;
+  input.focus();
+}
+
+/* ---------- 事件绑定 ---------- */
 form.addEventListener('submit', e => {
   e.preventDefault();
   send();
@@ -174,11 +204,50 @@ menuBtn.addEventListener('click', () => {
   sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
 });
 scrim.addEventListener('click', closeSidebar);
+backBtn.addEventListener('click', () => showView('home'));
+
 document.querySelectorAll('.quick-card').forEach(card => {
   card.addEventListener('click', () => {
     input.value = card.dataset.prompt;
     input.focus();
     closeSidebar();
+  });
+});
+
+/* 工作台侧边栏导航 */
+document.querySelectorAll('.wb-nav-item[data-nav]').forEach(item => {
+  item.addEventListener('click', () => {
+    const nav = item.dataset.nav;
+    if (nav === 'home') {
+      showView('home');
+      return;
+    }
+    if (nav === 'mock') {
+      enterMockInterview();
+      return;
+    }
+    // 准备中心 / 设置：暂未实现
+    toast('「' + item.querySelector('span').textContent + '」功能开发中，敬请期待');
+  });
+});
+
+/* 工作台 Banner 按钮（打开准备中心） */
+document.querySelectorAll('.banner-btn[data-nav]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    toast('「准备中心」功能开发中，敬请期待');
+  });
+});
+
+/* 工作台任务卡片 */
+document.querySelectorAll('.task-btn[data-card]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const card = btn.dataset.card;
+    if (card === 'mock') {
+      enterMockInterview();
+      return;
+    }
+    const name = btn.closest('.task-card').querySelector('.task-title').textContent;
+    toast('「' + name + '」功能开发中，敬请期待');
   });
 });
 
